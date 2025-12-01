@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Gracias por Acompañarme!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .robot-icon {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #764ba2;
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .message {
+            color: #333;
+            line-height: 1.8;
+            font-size: 1.1em;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .achievements {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .achievements h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .achievements ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .achievements li {
+            margin: 10px 0;
+            font-size: 1em;
+            padding: 5px;
+        }
+
+        .achievements li::before {
+            content: "🎓 ";
+            margin-right: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .sparkle {
+            display: inline-block;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .heart {
+            color: #e74c3c;
+            font-size: 1.5em;
+            display: inline-block;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(1.1);
+            }
+            50% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .robot-icon {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="robot-icon">🤖</div>
+        
+        <h1>¡Gracias por Estar Aquí!</h1>
+        
+        <div class="subtitle">
+            <span class="sparkle">✨</span> Un Momento Especial <span class="sparkle">✨</span>
+        </div>
+
+        <div class="message">
+            <p>Hoy celebro un logro que no habría sido posible sin tu apoyo, tu compañía y tu cariño. Cada desafío superado, cada noche de estudio, y cada momento de duda fueron más llevaderos sabiendo que contaba contigo.</p>
+        </div>
+
+        <div class="achievements">
+            <h3>Mis Logros</h3>
+            <ul>
+                <li>Tecnicatura en Ciencias de Datos e Inteligencia Artificial</li>
+                <li>Tecnicatura en Desarrollo Web y Aplicaciones Digitales</li>
+            </ul>
+        </div>
+
+        <div class="message">
+            <p>Este pequeño robot representa el camino que recorrí en el mundo de la tecnología, y quiero que lo tengas como un símbolo de mi gratitud.</p>
+            <p><strong>Gracias por creer en mí, por celebrar mis éxitos y por estar siempre presente.</strong></p>
+        </div>
+
+        <div class="footer">
+            Con todo mi cariño y agradecimiento <span class="heart">❤️</span>
+        </div>
+    </div>
+</body>
+</html>
