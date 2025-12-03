@@ -1,7 +1,7 @@
 // CONFIGURACIÓN DE CLOUDINARY - REEMPLAZÁ CON TUS DATOS
-const CLOUDINARY_CLOUD_NAME = 'TU_CLOUD_NAME'; // Reemplazar
-const CLOUDINARY_UPLOAD_PRESET = 'TU_UPLOAD_PRESET'; // Reemplazar
-const CLOUDINARY_FOLDER = 'tito-graduacion'; // Carpeta donde se guardarán las fotos
+const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww'; // Reemplazar
+const CLOUDINARY_UPLOAD_PRESET = 'graduacion'; // Reemplazar
+const CLOUDINARY_FOLDER = 'graduacion'; // Carpeta donde se guardarán las fotos
 
 // Elementos del DOM
 const video = document.getElementById('video');

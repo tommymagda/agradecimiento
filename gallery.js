@@ -1,7 +1,7 @@
 // CONFIGURACIÓN DE CLOUDINARY - DEBE COINCIDIR CON selfiecam.js
-const CLOUDINARY_CLOUD_NAME = 'TU_CLOUD_NAME'; // Reemplazar
-const CLOUDINARY_API_KEY = 'TU_API_KEY'; // Reemplazar (nuevo)
-const CLOUDINARY_FOLDER = 'tito-graduacion'; // Carpeta donde se guardan las fotos
+const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww'; // Reemplazar
+const CLOUDINARY_API_KEY = 'XxQ8t2Z9A2R1zp_akuUZqoMzUGI'; // Reemplazar (nuevo)
+const CLOUDINARY_FOLDER = 'graduacion'; // Carpeta donde se guardan las fotos
 
 // Elementos del DOM
 const loadingOverlay = document.getElementById('loadingOverlay');
