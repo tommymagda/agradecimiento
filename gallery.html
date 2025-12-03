@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖼️ Galería de Fotos - Tito</title>
+    <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando galería...</p>
+        </div>
+    </div>
+
+    <div class="gallery-container">
+        <div class="header">
+            <h1>🖼️ Galería de Recuerdos</h1>
+            <p>Todas tus fotos con Tito</p>
+        </div>
+
+        <div class="controls-top">
+            <button class="btn btn-back" id="backBtn">
+                ⬅️ Volver a la Cámara
+            </button>
+            <button class="btn btn-refresh" id="refreshBtn">
+                🔄 Actualizar
+            </button>
+        </div>
+
+        <div class="gallery-stats" id="galleryStats">
+            <div class="stat">
+                <span class="stat-number" id="photoCount">0</span>
+                <span class="stat-label">fotos</span>
+            </div>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- Las fotos se cargarán aquí dinámicamente -->
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📸</div>
+            <h2>Todavía no hay fotos</h2>
+            <p>Tomá tu primera selfie con Tito para comenzar la galería</p>
+            <button class="btn btn-primary" onclick="window.location.href='selfiecam.html'">
+                📷 Tomar Primera Foto
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para ver foto en grande -->
+    <div class="modal" id="photoModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">✕</button>
+            <img id="modalImage" alt="Foto ampliada">
+            <div class="modal-info">
+                <p id="modalDate"></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-download" id="modalDownload">
+                    💾 Descargar
+                </button>
+                <button class="btn btn-share" id="modalShare">
+                    📤 Compartir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="gallery.js"></script>
+</body>
+</html>
