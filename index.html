@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Gracias por Acompañarme! 06/12/2025</title>
+    <title>¡Gracias por Acompañarme!</title>
     <style>
         * {
             margin: 0;
@@ -120,6 +120,14 @@
             50% {
                 transform: translateY(-15px) rotate(5deg);
             }
+        }
+
+        .robot-name {
+            text-align: center;
+            color: #764ba2;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
 
         h1 {
@@ -281,6 +289,38 @@
             opacity: 0.9;
         }
 
+        /* Botón de Selfie */
+        .selfie-button {
+            display: block;
+            margin: 40px auto;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(56, 239, 125, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .selfie-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(56, 239, 125, 0.6);
+        }
+
+        .selfie-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .selfie-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
         .footer {
             text-align: center;
             margin-top: 40px;
@@ -341,6 +381,11 @@
             .stats {
                 grid-template-columns: 1fr;
             }
+
+            .selfie-button {
+                font-size: 1.1em;
+                padding: 18px 35px;
+            }
         }
     </style>
 </head>
@@ -349,6 +394,7 @@
     
     <div class="container">
         <div class="robot-icon" onclick="this.style.animation='none'; setTimeout(() => this.style.animation='', 10);">🤖</div>
+        <div class="robot-name">Este es Tito</div>
         
         <h1>¡Gracias por Estar Aquí!</h1>
         
@@ -390,8 +436,14 @@
 
         <div class="message">
             <p>Tito, este pequeño robot impreso en 3D, representa el camino que recorrí en el mundo de la tecnología. Combina todo lo que aprendí: el diseño, la programación y la inteligencia artificial.</p>
-            <p><strong>Quiero que lo tengas como un símbolo de mi gratitud y como recordatorio de que los sueños no tienen fecha de caducidad. Si yo pude a mis 39 años, vos también podés lograr lo que te propongas.</strong></p>
+            <p><strong>Quiero que lo tengas como un símbolo de mi gratitud y como recordatorio de que los sueños no tienen fecha de caducidad. Si yo pude, vos también podés lograr lo que te propongas.</strong></p>
         </div>
+
+        <!-- Botón para ir a la app de selfies -->
+        <a href="selfiecam.html" class="selfie-button">
+            <span class="selfie-icon">📸</span>
+            ¡Tomate una Selfie con Tito!
+        </a>
 
         <div class="footer">
             Con todo mi cariño, admiración y agradecimiento infinito <span class="heart">❤️</span>
