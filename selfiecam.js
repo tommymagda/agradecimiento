@@ -336,7 +336,7 @@ function drawFrame(ctx, width, height) {
 
     ctx.font = `bold ${width * 0.06}px Arial`;
     ctx.fillStyle = '#FFD700';
-    ctx.fillText('2024', width / 2, height * 0.13);
+    ctx.fillText('2025', width / 2, height * 0.13);
 
     ctx.font = `${width * 0.08}px Arial`;
     ctx.fillText('🎓', width * 0.15, height * 0.12);
@@ -347,11 +347,11 @@ function drawFrame(ctx, width, height) {
     ctx.fillStyle = 'white';
     ctx.font = `600 ${width * 0.035}px Arial`;
     ctx.fillText('🎯 Ciencias de Datos e IA', width / 2, height * 0.92);
-    ctx.fillText('💻 Desarrollo Web', width / 2, height * 0.95);
+    ctx.fillText('💻 Desarrollo Web y Aplicaciones Digitales', width / 2, height * 0.95);
 
     ctx.fillStyle = '#FFD700';
     ctx.font = `bold ${width * 0.04}px Arial`;
-    ctx.fillText('#NuncaEsTarde', width / 2, height * 0.98);
+    ctx.fillText('#AlFinMeRecibi', width / 2, height * 0.98);
 }
 
 // Descargar foto
