@@ -54,43 +54,46 @@ async function loadGallery() {
     loadingOverlay.classList.add('active');
     
     try {
-        // Método 1: Intentar con la Admin API (requiere configuración)
-        // Como no tenemos API key/secret en el cliente, usaremos un enfoque alternativo
+        // Método 1: Intentar con JSON endpoint (requiere que las imágenes sean públicas)
+        const jsonUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.json`;
         
-        // Método 2: Usar el endpoint de recursos públicos
-        // Este endpoint funciona si las imágenes son públicas
-        const searchUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.json`;
+        console.log('🔍 Intentando cargar desde JSON:', jsonUrl);
         
-        console.log('Intentando cargar desde:', searchUrl);
-        
-        const response = await fetch(searchUrl);
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Respuesta JSON:', data);
+        try {
+            const jsonResponse = await fetch(jsonUrl);
+            console.log('📡 Respuesta JSON status:', jsonResponse.status, jsonResponse.statusText);
             
-            if (data.resources && data.resources.length > 0) {
-                allPhotos = data.resources.map(resource => ({
-                    public_id: resource.public_id,
-                    format: resource.format || 'png',
-                    created_at: resource.created_at,
-                    url: resource.secure_url || resource.url,
-                    thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${resource.public_id}.${resource.format || 'png'}`
-                }));
+            if (jsonResponse.ok) {
+                const data = await jsonResponse.json();
+                console.log('✅ Datos JSON recibidos:', data);
                 
-                console.log('Fotos procesadas:', allPhotos.length);
-                displayGallery(allPhotos);
-                emptyState.classList.remove('show');
-                return;
+                if (data.resources && data.resources.length > 0) {
+                    allPhotos = data.resources.map(resource => ({
+                        public_id: resource.public_id,
+                        format: resource.format || 'png',
+                        created_at: resource.created_at,
+                        url: resource.secure_url || resource.url,
+                        thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${resource.public_id}.${resource.format || 'png'}`
+                    }));
+                    
+                    console.log('📸 Fotos procesadas desde JSON:', allPhotos.length);
+                    displayGallery(allPhotos);
+                    emptyState.classList.remove('show');
+                    return;
+                }
+            } else {
+                console.warn('⚠️ JSON endpoint no disponible:', jsonResponse.status);
             }
+        } catch (jsonError) {
+            console.warn('⚠️ Error con JSON endpoint:', jsonError.message);
         }
         
-        // Si el método JSON falla, intentar con RSS
-        console.log('JSON no disponible, intentando RSS...');
+        // Método 2: Intentar con RSS
+        console.log('🔄 Intentando con RSS...');
         await loadFromRSS();
         
     } catch (error) {
-        console.error('Error al cargar galería:', error);
+        console.error('❌ Error general al cargar galería:', error);
         
         // Último recurso: cargar desde localStorage
         await loadFromLocalStorage();
@@ -103,26 +106,35 @@ async function loadGallery() {
 async function loadFromRSS() {
     const rssUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.rss`;
     
-    console.log('Cargando desde RSS:', rssUrl);
+    console.log('📡 Cargando desde RSS:', rssUrl);
     
     const response = await fetch(rssUrl);
+    console.log('📡 Respuesta RSS status:', response.status, response.statusText);
     
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
     }
     
     const rssText = await response.text();
-    console.log('RSS recibido, primeros 200 caracteres:', rssText.substring(0, 200));
+    console.log('📄 RSS recibido, primeros 500 caracteres:', rssText.substring(0, 500));
+    
+    // Verificar si es un error XML
+    if (rssText.includes('<Error>') || rssText.includes('Unauthorized')) {
+        console.error('❌ Error en RSS:', rssText);
+        throw new Error('RSS no disponible: Imágenes no son públicas o carpeta no existe');
+    }
     
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(rssText, "text/xml");
     
     const parseError = xmlDoc.querySelector('parsererror');
     if (parseError) {
+        console.error('❌ Error parseando RSS:', parseError.textContent);
         throw new Error('Error al parsear RSS: ' + parseError.textContent);
     }
     
     const items = xmlDoc.querySelectorAll('item');
+    console.log('📸 Items encontrados en RSS:', items.length);
     
     if (items.length > 0) {
         allPhotos = Array.from(items).map(item => {
@@ -145,11 +157,12 @@ async function loadFromRSS() {
             };
         });
         
-        console.log('Fotos procesadas desde RSS:', allPhotos.length);
+        console.log('✅ Fotos procesadas desde RSS:', allPhotos.length);
         displayGallery(allPhotos);
         emptyState.classList.remove('show');
     } else {
-        throw new Error('No se encontraron items en el RSS');
+        console.warn('⚠️ No se encontraron items en el RSS');
+        throw new Error('No se encontraron fotos en el RSS');
     }
 }
 
@@ -222,27 +235,43 @@ function showConfigErrorMessage() {
         border-radius: 15px;
         margin: 20px auto;
         max-width: 600px;
-        text-align: center;
+        text-align: left;
     `;
     errorDiv.innerHTML = `
-        <h3 style="margin-bottom: 10px;">🔧 Configuración Necesaria</h3>
-        <p style="margin-bottom: 10px;">Para ver todas las fotos, necesitas configurar Cloudinary:</p>
-        <ol style="text-align: left; padding-left: 30px; line-height: 1.8;">
-            <li>En Cloudinary, ve a Settings → Security</li>
-            <li>En "Restricted image types", <strong>DESMARCA "Sprite"</strong></li>
-            <li>Opcionalmente, desmarca "Resource list" para más acceso</li>
-            <li>Guarda los cambios y recarga esta página</li>
+        <h3 style="margin-bottom: 15px; text-align: center;">🔧 Las fotos se suben pero no son públicas</h3>
+        
+        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <strong>El problema:</strong> Las fotos se guardan en Cloudinary pero como <strong>privadas</strong>, 
+            por eso no se pueden listar en la galería.
+        </div>
+        
+        <p style="margin-bottom: 10px;"><strong>✅ Solución en 3 pasos:</strong></p>
+        <ol style="line-height: 2; padding-left: 25px; margin-bottom: 15px;">
+            <li>Ve a <strong>Cloudinary → Settings → Upload → Upload presets</strong></li>
+            <li>Busca el preset <strong>"graduacion"</strong> y editalo</li>
+            <li>Cambia <strong>"Access mode"</strong> de "Private" a <strong>"Public"</strong> ⭐</li>
+            <li>En <strong>"Signing Mode"</strong> debe estar en <strong>"Unsigned"</strong></li>
+            <li>Guarda los cambios</li>
         </ol>
-        <button onclick="location.reload()" style="
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: white;
-            color: #e74c3c;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        ">🔄 Recargar Página</button>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+            <strong>💡 Importante:</strong> Las fotos <strong>anteriores</strong> seguirán siendo privadas. 
+            Después de hacer este cambio, <strong>tomá una nueva foto</strong> y esa sí será pública y visible en la galería.
+        </div>
+        
+        <div style="text-align: center;">
+            <button onclick="location.reload()" style="
+                margin-top: 10px;
+                padding: 12px 25px;
+                background: white;
+                color: #e74c3c;
+                border: none;
+                border-radius: 10px;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 1em;
+            ">🔄 Recargar Página</button>
+        </div>
     `;
     
     emptyState.insertAdjacentElement('beforebegin', errorDiv);
