@@ -49,103 +49,203 @@ photoModal.addEventListener('click', (e) => {
     }
 });
 
-// Función para cargar galería usando RSS feed
+// Función para cargar galería usando la API de Cloudinary
 async function loadGallery() {
     loadingOverlay.classList.add('active');
     
     try {
-        // Método alternativo: usar RSS feed que siempre está disponible
-        const rssUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.rss`;
+        // Método 1: Intentar con la Admin API (requiere configuración)
+        // Como no tenemos API key/secret en el cliente, usaremos un enfoque alternativo
         
-        console.log('Cargando desde RSS:', rssUrl);
+        // Método 2: Usar el endpoint de recursos públicos
+        // Este endpoint funciona si las imágenes son públicas
+        const searchUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.json`;
         
-        const response = await fetch(rssUrl);
+        console.log('Intentando cargar desde:', searchUrl);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch(searchUrl);
         
-        const rssText = await response.text();
-        console.log('RSS recibido:', rssText.substring(0, 200));
-        
-        // Parsear el RSS XML
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(rssText, "text/xml");
-        
-        // Verificar si hay error en el XML
-        const parseError = xmlDoc.querySelector('parsererror');
-        if (parseError) {
-            throw new Error('Error al parsear RSS');
-        }
-        
-        // Extraer items del RSS
-        const items = xmlDoc.querySelectorAll('item');
-        
-        if (items.length > 0) {
-            allPhotos = Array.from(items).map(item => {
-                const link = item.querySelector('link').textContent;
-                const pubDate = item.querySelector('pubDate').textContent;
-                const description = item.querySelector('description').textContent;
-                
-                // Extraer public_id y format del link
-                // Link ejemplo: https://res.cloudinary.com/dukqtp9ww/image/upload/v1234567890/graduacion/abc123.png
-                const urlParts = link.split('/');
-                const fileName = urlParts[urlParts.length - 1]; // abc123.png
-                const fileNameParts = fileName.split('.');
-                const format = fileNameParts[fileNameParts.length - 1]; // png
-                const publicIdWithoutExt = fileNameParts.slice(0, -1).join('.'); // abc123
-                const publicId = `${CLOUDINARY_FOLDER}/${publicIdWithoutExt}`; // graduacion/abc123
-                
-                return {
-                    public_id: publicId,
-                    format: format,
-                    created_at: new Date(pubDate).toISOString(),
-                    url: link,
-                    thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${publicId}.${format}`
-                };
-            });
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Respuesta JSON:', data);
             
-            console.log('Fotos procesadas:', allPhotos.length);
-            displayGallery(allPhotos);
-            emptyState.classList.remove('show');
-        } else {
-            console.log('No se encontraron items en el RSS');
-            showEmptyState();
+            if (data.resources && data.resources.length > 0) {
+                allPhotos = data.resources.map(resource => ({
+                    public_id: resource.public_id,
+                    format: resource.format || 'png',
+                    created_at: resource.created_at,
+                    url: resource.secure_url || resource.url,
+                    thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${resource.public_id}.${resource.format || 'png'}`
+                }));
+                
+                console.log('Fotos procesadas:', allPhotos.length);
+                displayGallery(allPhotos);
+                emptyState.classList.remove('show');
+                return;
+            }
         }
+        
+        // Si el método JSON falla, intentar con RSS
+        console.log('JSON no disponible, intentando RSS...');
+        await loadFromRSS();
         
     } catch (error) {
         console.error('Error al cargar galería:', error);
         
-        // Intentar cargar desde localStorage como último recurso
-        const savedPhotos = localStorage.getItem('tito_photos');
-        if (savedPhotos) {
-            try {
-                allPhotos = JSON.parse(savedPhotos);
-                if (allPhotos.length > 0) {
-                    console.log('Cargando desde localStorage:', allPhotos.length);
-                    displayGallery(allPhotos);
-                    emptyState.classList.remove('show');
-                    
-                    // Mostrar mensaje informativo
-                    alert('⚠️ Mostrando fotos guardadas localmente en este dispositivo.\n\n' +
-                          'Para ver TODAS las fotos de todos los dispositivos, necesitamos configurar Cloudinary correctamente.\n\n' +
-                          'Contactá al desarrollador para ayuda.');
-                } else {
-                    showEmptyState();
-                }
-            } catch (e) {
-                console.error('Error al cargar localStorage:', e);
-                showEmptyState();
-            }
-        } else {
-            showEmptyState();
-            alert('⚠️ No se pudieron cargar las fotos desde Cloudinary.\n\n' +
-                  'Error: ' + error.message + '\n\n' +
-                  'Revisá la consola del navegador (F12) para más detalles.');
-        }
+        // Último recurso: cargar desde localStorage
+        await loadFromLocalStorage();
     } finally {
         loadingOverlay.classList.remove('active');
     }
+}
+
+// Función auxiliar para cargar desde RSS
+async function loadFromRSS() {
+    const rssUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.rss`;
+    
+    console.log('Cargando desde RSS:', rssUrl);
+    
+    const response = await fetch(rssUrl);
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const rssText = await response.text();
+    console.log('RSS recibido, primeros 200 caracteres:', rssText.substring(0, 200));
+    
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(rssText, "text/xml");
+    
+    const parseError = xmlDoc.querySelector('parsererror');
+    if (parseError) {
+        throw new Error('Error al parsear RSS: ' + parseError.textContent);
+    }
+    
+    const items = xmlDoc.querySelectorAll('item');
+    
+    if (items.length > 0) {
+        allPhotos = Array.from(items).map(item => {
+            const link = item.querySelector('link').textContent;
+            const pubDate = item.querySelector('pubDate').textContent;
+            
+            const urlParts = link.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const fileNameParts = fileName.split('.');
+            const format = fileNameParts[fileNameParts.length - 1];
+            const publicIdWithoutExt = fileNameParts.slice(0, -1).join('.');
+            const publicId = `${CLOUDINARY_FOLDER}/${publicIdWithoutExt}`;
+            
+            return {
+                public_id: publicId,
+                format: format,
+                created_at: new Date(pubDate).toISOString(),
+                url: link,
+                thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${publicId}.${format}`
+            };
+        });
+        
+        console.log('Fotos procesadas desde RSS:', allPhotos.length);
+        displayGallery(allPhotos);
+        emptyState.classList.remove('show');
+    } else {
+        throw new Error('No se encontraron items en el RSS');
+    }
+}
+
+// Función auxiliar para cargar desde localStorage
+async function loadFromLocalStorage() {
+    const savedPhotos = localStorage.getItem('tito_photos');
+    
+    if (savedPhotos) {
+        try {
+            allPhotos = JSON.parse(savedPhotos);
+            
+            if (allPhotos.length > 0) {
+                console.log('Cargando desde localStorage:', allPhotos.length, 'fotos');
+                displayGallery(allPhotos);
+                emptyState.classList.remove('show');
+                
+                // Mostrar mensaje informativo
+                showInfoMessage();
+            } else {
+                showEmptyState();
+            }
+        } catch (e) {
+            console.error('Error al cargar localStorage:', e);
+            showEmptyState();
+        }
+    } else {
+        showEmptyState();
+        showConfigErrorMessage();
+    }
+}
+
+// Mostrar mensaje informativo
+function showInfoMessage() {
+    const message = document.createElement('div');
+    message.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        z-index: 2000;
+        max-width: 90%;
+        text-align: center;
+        animation: slideDown 0.5s ease;
+    `;
+    message.innerHTML = `
+        <strong>⚠️ Mostrando fotos locales</strong><br>
+        <span style="font-size: 0.9em;">Solo ves las fotos de este dispositivo. Para configurar Cloudinary correctamente, revisa las instrucciones.</span>
+    `;
+    
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+        message.style.animation = 'slideUp 0.5s ease';
+        setTimeout(() => message.remove(), 500);
+    }, 5000);
+}
+
+// Mostrar mensaje de error de configuración
+function showConfigErrorMessage() {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        background: rgba(231, 76, 60, 0.95);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px auto;
+        max-width: 600px;
+        text-align: center;
+    `;
+    errorDiv.innerHTML = `
+        <h3 style="margin-bottom: 10px;">🔧 Configuración Necesaria</h3>
+        <p style="margin-bottom: 10px;">Para ver todas las fotos, necesitas configurar Cloudinary:</p>
+        <ol style="text-align: left; padding-left: 30px; line-height: 1.8;">
+            <li>En Cloudinary, ve a Settings → Security</li>
+            <li>En "Restricted image types", <strong>DESMARCA "Sprite"</strong></li>
+            <li>Opcionalmente, desmarca "Resource list" para más acceso</li>
+            <li>Guarda los cambios y recarga esta página</li>
+        </ol>
+        <button onclick="location.reload()" style="
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: white;
+            color: #e74c3c;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        ">🔄 Recargar Página</button>
+    `;
+    
+    emptyState.insertAdjacentElement('beforebegin', errorDiv);
 }
 
 // Mostrar galería con las fotos
@@ -295,3 +395,30 @@ document.addEventListener('keydown', (e) => {
         closeModal();
     }
 });
+
+// Estilos de animación para mensajes
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            transform: translate(-50%, -100%);
+            opacity: 0;
+        }
+        to {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+        to {
+            transform: translate(-50%, -100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
