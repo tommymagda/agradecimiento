@@ -1,6 +1,5 @@
 // CONFIGURACIÓN DE CLOUDINARY - DEBE COINCIDIR CON selfiecam.js
-const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww'; // Reemplazar
-const CLOUDINARY_API_KEY = 'XxQ8t2Z9A2R1zp_akuUZqoMzUGI'; // Reemplazar (nuevo)
+const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww'; // Tu Cloud Name
 const CLOUDINARY_FOLDER = 'graduacion'; // Carpeta donde se guardan las fotos
 
 // Elementos del DOM
@@ -51,87 +50,76 @@ photoModal.addEventListener('click', (e) => {
     }
 });
 
-// Función principal para cargar la galería usando Cloudinary Search
+// Función principal para cargar la galería desde Cloudinary
 async function loadGallery() {
     loadingOverlay.classList.add('active');
     
     try {
-        // Usar el widget de búsqueda de Cloudinary que funciona sin autenticación
-        const searchUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.json`;
+        // Método 1: Intentar cargar usando la API de listado de recursos
+        const listUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/list/${CLOUDINARY_FOLDER}.json`;
         
-        const response = await fetch(searchUrl);
+        console.log('Intentando cargar desde:', listUrl);
+        
+        const response = await fetch(listUrl);
         
         if (response.ok) {
             const data = await response.json();
+            console.log('Datos recibidos de Cloudinary:', data);
             
             if (data.resources && data.resources.length > 0) {
-                // Convertir el formato de respuesta a nuestro formato esperado
-                allPhotos = data.resources.map(resource => ({
-                    public_id: resource.public_id,
-                    format: resource.format || 'png',
-                    created_at: resource.created_at,
-                    url: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${resource.public_id}.${resource.format || 'png'}`
-                }));
+                // Convertir las fotos al formato que usamos
+                allPhotos = data.resources.map(resource => {
+                    // El public_id viene con la carpeta, ejemplo: "graduacion/abc123"
+                    const publicId = resource.public_id;
+                    const format = resource.format || 'png';
+                    
+                    return {
+                        public_id: publicId,
+                        format: format,
+                        created_at: resource.created_at || new Date().toISOString(),
+                        url: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}.${format}`,
+                        thumbnail: `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${publicId}.${format}`
+                    };
+                });
                 
+                console.log('Fotos procesadas:', allPhotos.length);
                 displayGallery(allPhotos);
                 emptyState.classList.remove('show');
             } else {
+                console.log('No hay recursos en la respuesta');
                 showEmptyState();
             }
         } else {
-            // Si el método de listado no funciona, cargar desde localStorage como fallback
-            loadFromLocalStorage();
+            console.error('Error en la respuesta:', response.status);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
     } catch (error) {
-        console.error('Error al cargar galería:', error);
-        // Intentar cargar desde localStorage como backup
-        loadFromLocalStorage();
+        console.error('Error al cargar galería desde Cloudinary:', error);
+        
+        // Si falla, mostrar mensaje informativo
+        alert('No se pudieron cargar las fotos desde Cloudinary. Posibles razones:\n\n' +
+              '1. La opción "Resource list" no está habilitada en Settings → Security\n' +
+              '2. No hay fotos subidas todavía\n' +
+              '3. El nombre de la carpeta no coincide\n\n' +
+              'Revisá la consola del navegador (F12) para más detalles.');
+        
+        showEmptyState();
     } finally {
         loadingOverlay.classList.remove('active');
     }
 }
-
-// Cargar fotos desde localStorage (fallback)
-function loadFromLocalStorage() {
-    const savedPhotos = localStorage.getItem('tito_photos');
-    
-    if (savedPhotos) {
-        try {
-            allPhotos = JSON.parse(savedPhotos);
-            if (allPhotos.length > 0) {
-                displayGallery(allPhotos);
-                emptyState.classList.remove('show');
-            } else {
-                showEmptyState();
-            }
-        } catch (error) {
-            console.error('Error al parsear fotos guardadas:', error);
-            showEmptyState();
-        }
-    } else {
-        showEmptyState();
-    }
-}
-
-// Guardar foto en localStorage (llamar desde selfiecam.js después de subir)
-function savePhotoToLocalStorage(photoData) {
-    const savedPhotos = localStorage.getItem('tito_photos');
-    let photos = savedPhotos ? JSON.parse(savedPhotos) : [];
-    
-    photos.unshift(photoData); // Agregar al principio
-    localStorage.setItem('tito_photos', JSON.stringify(photos));
-}
-
-// Hacer esta función disponible globalmente
-window.savePhotoToLocalStorage = savePhotoToLocalStorage;
 
 // Mostrar galería con las fotos
 function displayGallery(photos) {
     galleryGrid.innerHTML = '';
     
     // Ordenar fotos por fecha (más recientes primero)
-    photos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    photos.sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        return dateB - dateA;
+    });
     
     // Actualizar contador
     photoCount.textContent = photos.length;
@@ -148,9 +136,8 @@ function createGalleryItem(photo) {
     const div = document.createElement('div');
     div.className = 'gallery-item';
     
-    // Generar URL de thumbnail optimizado
-    const imageUrl = photo.url || 
-        `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_500,c_fill/${photo.public_id}.${photo.format}`;
+    // Usar el thumbnail optimizado si existe, sino usar la URL normal
+    const imageUrl = photo.thumbnail || photo.url;
     
     const date = new Date(photo.created_at);
     const formattedDate = date.toLocaleDateString('es-AR', { 
@@ -162,7 +149,7 @@ function createGalleryItem(photo) {
     });
     
     div.innerHTML = `
-        <img src="${imageUrl}" alt="Foto de graduación" loading="lazy">
+        <img src="${imageUrl}" alt="Foto de graduación" loading="lazy" onerror="this.src='${photo.url}'">
         <div class="gallery-item-info">
             <div class="gallery-item-date">📅 ${formattedDate}</div>
             <div class="gallery-item-actions">
@@ -188,10 +175,7 @@ function createGalleryItem(photo) {
 function openModal(photo) {
     currentModalPhoto = photo;
     
-    const fullImageUrl = photo.url || 
-        `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${photo.public_id}.${photo.format}`;
-    
-    modalImage.src = fullImageUrl;
+    modalImage.src = photo.url;
     
     const date = new Date(photo.created_at);
     const formattedDate = date.toLocaleDateString('es-AR', { 
@@ -239,8 +223,8 @@ async function shareImage(url) {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: '¡Mi graduación con Tito!',
-                text: '¡Mirá mi foto de graduación! #NuncaEsTarde 🎓🤖',
+                title: '¡Mi graduación!',
+                text: '¡Mirá mi foto de graduación! #AlFinMeRecibi 🎓',
                 url: url
             });
         } catch (error) {
