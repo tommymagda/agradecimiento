@@ -1,7 +1,7 @@
-// CONFIGURACIÓN DE CLOUDINARY - REEMPLAZÁ CON TUS DATOS
-const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww'; // Reemplazar
-const CLOUDINARY_UPLOAD_PRESET = 'graduacion'; // Reemplazar
-const CLOUDINARY_FOLDER = 'graduacion'; // Carpeta donde se guardarán las fotos
+// CONFIGURACIÓN DE CLOUDINARY
+const CLOUDINARY_CLOUD_NAME = 'dukqtp9ww';
+const CLOUDINARY_UPLOAD_PRESET = 'graduacion';
+const CLOUDINARY_FOLDER = 'graduacion';
 
 // Elementos del DOM
 const video = document.getElementById('video');
@@ -10,31 +10,66 @@ const preview = document.getElementById('preview');
 const startBtn = document.getElementById('startBtn');
 const switchBtn = document.getElementById('switchBtn');
 const stickersBtn = document.getElementById('stickersBtn');
+const filtersBtn = document.getElementById('filtersBtn');
 const captureBtn = document.getElementById('captureBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const newPhotoBtn = document.getElementById('newPhotoBtn');
 const galleryBtn = document.getElementById('galleryBtn');
+const editPhotoBtn = document.getElementById('editPhotoBtn');
 const initialState = document.getElementById('initialState');
 const previewContainer = document.getElementById('previewContainer');
 const stickersPanel = document.getElementById('stickersPanel');
+const filtersPanel = document.getElementById('filtersPanel');
 const closeStickers = document.getElementById('closeStickers');
+const closeFilters = document.getElementById('closeFilters');
 const clearStickers = document.getElementById('clearStickers');
 const stickersGrid = document.getElementById('stickersGrid');
+const filtersGrid = document.getElementById('filtersGrid');
 const cameraContainer = document.querySelector('.camera-container');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const successMessage = document.getElementById('successMessage');
+
+// Sliders de ajuste
+const brightnessSlider = document.getElementById('brightnessSlider');
+const contrastSlider = document.getElementById('contrastSlider');
+const saturationSlider = document.getElementById('saturationSlider');
+const brightnessValue = document.getElementById('brightnessValue');
+const contrastValue = document.getElementById('contrastValue');
+const saturationValue = document.getElementById('saturationValue');
 
 // Variables de estado
 let stream = null;
 let currentFacingMode = 'user';
 let placedStickers = [];
 let stickerIdCounter = 0;
+let currentFilter = 'none';
+let currentBrightness = 100;
+let currentContrast = 100;
+let currentSaturation = 100;
+let capturedImageData = null;
+
+// Filtros disponibles (tipo Instagram)
+const availableFilters = [
+    { name: 'none', label: 'Original', css: 'none' },
+    { name: 'clarendon', label: 'Clarendon', css: 'contrast(1.2) saturate(1.35)' },
+    { name: 'gingham', label: 'Gingham', css: 'brightness(1.05) hue-rotate(-10deg)' },
+    { name: 'moon', label: 'Luna', css: 'grayscale(1) contrast(1.1) brightness(1.1)' },
+    { name: 'lark', label: 'Alondra', css: 'contrast(0.9) brightness(1.1) saturate(1.2)' },
+    { name: 'reyes', label: 'Reyes', css: 'sepia(0.22) brightness(1.1) contrast(0.85)' },
+    { name: 'juno', label: 'Juno', css: 'sepia(0.35) contrast(1.15) brightness(1.15) saturate(1.8)' },
+    { name: 'slumber', label: 'Sueño', css: 'saturate(0.66) brightness(1.05)' },
+    { name: 'aden', label: 'Aden', css: 'hue-rotate(-20deg) contrast(0.9) saturate(0.85) brightness(1.2)' },
+    { name: 'perpetua', label: 'Perpetua', css: 'contrast(1.1) brightness(1.05)' },
+    { name: 'amaro', label: 'Amaro', css: 'hue-rotate(-10deg) contrast(0.9) brightness(1.1) saturate(1.5)' },
+    { name: 'valencia', label: 'Valencia', css: 'sepia(0.25) brightness(1.08) contrast(1.05)' },
+    { name: 'walden', label: 'Walden', css: 'sepia(0.35) contrast(0.8) brightness(1.15) saturate(1.6)' }
+];
 
 // Stickers disponibles
 const availableStickers = [
     '🎓', '🤖', '✨', '🎉', '🎊', '🥳', '💜', '❤️', '🌟', '⭐',
     '🏆', '📚', '💻', '🖥️', '📱', '🎯', '💪', '👍', '🙌', '✌️',
-    '👏', '🤘', '🔥', '💯', '🎈', '🎁', '�', '🥂', '🎭', '🎨',
+    '👏', '🤘', '🔥', '💯', '🎈', '🎁', '🍾', '🥂', '🎭', '🎨',
     '😎', '🤓', '😄', '😊', '🥰', '😍', '🤩', '💃', '🕺', '🎶'
 ];
 
@@ -46,6 +81,36 @@ availableStickers.forEach(emoji => {
     div.onclick = () => addSticker(emoji);
     stickersGrid.appendChild(div);
 });
+
+// Inicializar grid de filtros
+availableFilters.forEach(filter => {
+    const div = document.createElement('div');
+    div.className = 'filter-item';
+    div.innerHTML = `
+        <div class="filter-preview" style="filter: ${filter.css}">
+            <div class="filter-sample"></div>
+        </div>
+        <div class="filter-name">${filter.label}</div>
+    `;
+    div.onclick = () => applyFilter(filter.name);
+    if (filter.name === 'none') {
+        div.classList.add('active');
+    }
+    filtersGrid.appendChild(div);
+});
+
+// Aplicar filtro
+function applyFilter(filterName) {
+    currentFilter = filterName;
+    const filter = availableFilters.find(f => f.name === filterName);
+    video.style.filter = filter ? filter.css : 'none';
+    
+    // Actualizar UI
+    document.querySelectorAll('.filter-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.closest('.filter-item').classList.add('active');
+}
 
 // Función para iniciar la cámara
 async function startCamera(facingMode = 'user') {
@@ -71,6 +136,7 @@ async function startCamera(facingMode = 'user') {
         startBtn.textContent = '⏸️ Detener Cámara';
         switchBtn.style.display = 'inline-flex';
         stickersBtn.style.display = 'inline-flex';
+        filtersBtn.style.display = 'inline-flex';
         
     } catch (error) {
         console.error('Error al acceder a la cámara:', error);
@@ -86,9 +152,10 @@ function stopCamera() {
         stream = null;
         initialState.style.display = 'block';
         captureBtn.disabled = true;
-        startBtn.textContent = '🔹 Activar Cámara';
+        startBtn.textContent = '🎥 Activar Cámara';
         switchBtn.style.display = 'none';
         stickersBtn.style.display = 'none';
+        filtersBtn.style.display = 'none';
     }
 }
 
@@ -215,7 +282,7 @@ function clearAllStickers() {
     placedStickers = [];
 }
 
-// Capturar foto
+// Capturar foto con filtros aplicados
 async function capturePhoto() {
     const container = document.querySelector('.camera-container');
     const rect = container.getBoundingClientRect();
@@ -224,8 +291,10 @@ async function capturePhoto() {
     canvas.height = rect.height * 2;
     const ctx = canvas.getContext('2d');
 
-    // Dibujar video
+    // Dibujar video con filtro aplicado
+    ctx.filter = video.style.filter || 'none';
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.filter = 'none';
 
     // Dibujar stickers
     placedStickers.forEach(sticker => {
@@ -251,9 +320,13 @@ async function capturePhoto() {
     drawFrame(ctx, canvas.width, canvas.height);
 
     const imageDataUrl = canvas.toDataURL('image/png');
+    capturedImageData = imageDataUrl;
     preview.src = imageDataUrl;
     preview.style.display = 'block';
     previewContainer.style.display = 'block';
+    
+    // Mostrar botón de editar
+    editPhotoBtn.style.display = 'inline-flex';
     
     // Subir a Cloudinary
     await uploadToCloudinary(imageDataUrl);
@@ -263,8 +336,15 @@ async function capturePhoto() {
     }, 100);
 }
 
-// Subir imagen a Cloudinary
-async function uploadToCloudinary(imageDataUrl) {
+// Abrir editor de fotos
+function openPhotoEditor() {
+    // Aquí abrirías una modal o nueva página con el editor
+    // Por ahora, simplemente aplicamos transformaciones de Cloudinary
+    window.open('photo-editor.html', '_blank');
+}
+
+// Subir imagen a Cloudinary con transformaciones opcionales
+async function uploadToCloudinary(imageDataUrl, transformations = '') {
     loadingOverlay.classList.add('active');
     
     try {
@@ -275,6 +355,11 @@ async function uploadToCloudinary(imageDataUrl) {
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         formData.append('folder', CLOUDINARY_FOLDER);
         formData.append('timestamp', Date.now());
+
+        // Agregar transformaciones de Cloudinary (opcional)
+        if (transformations) {
+            formData.append('transformation', transformations);
+        }
 
         const response = await fetch(
             `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -291,7 +376,6 @@ async function uploadToCloudinary(imageDataUrl) {
         const data = await response.json();
         console.log('Imagen subida exitosamente:', data.secure_url);
         
-        // Guardar en localStorage como backup
         savePhotoLocally({
             public_id: data.public_id,
             format: data.format,
@@ -299,7 +383,6 @@ async function uploadToCloudinary(imageDataUrl) {
             url: data.secure_url
         });
         
-        // Mostrar mensaje de éxito
         successMessage.classList.add('show');
         setTimeout(() => {
             successMessage.classList.remove('show');
@@ -378,32 +461,51 @@ startBtn.addEventListener('click', () => {
 });
 
 switchBtn.addEventListener('click', switchCamera);
+
 stickersBtn.addEventListener('click', () => {
     stickersPanel.classList.add('open');
+    filtersPanel.classList.remove('open');
 });
+
+filtersBtn.addEventListener('click', () => {
+    filtersPanel.classList.add('open');
+    stickersPanel.classList.remove('open');
+});
+
 closeStickers.addEventListener('click', () => {
     stickersPanel.classList.remove('open');
 });
+
+closeFilters.addEventListener('click', () => {
+    filtersPanel.classList.remove('open');
+});
+
 clearStickers.addEventListener('click', clearAllStickers);
 captureBtn.addEventListener('click', capturePhoto);
 downloadBtn.addEventListener('click', downloadPhoto);
+
+if (editPhotoBtn) {
+    editPhotoBtn.addEventListener('click', openPhotoEditor);
+}
+
 newPhotoBtn.addEventListener('click', () => {
     previewContainer.style.display = 'none';
     preview.style.display = 'none';
+    if (editPhotoBtn) editPhotoBtn.style.display = 'none';
 });
+
 galleryBtn.addEventListener('click', () => {
     window.location.href = 'gallery.html';
 });
 
-// Guardar foto localmente como backup
+// Guardar foto localmente
 function savePhotoLocally(photoData) {
     try {
         const savedPhotos = localStorage.getItem('tito_photos');
         let photos = savedPhotos ? JSON.parse(savedPhotos) : [];
         
-        photos.unshift(photoData); // Agregar al principio (más reciente)
+        photos.unshift(photoData);
         
-        // Limitar a 100 fotos para no saturar localStorage
         if (photos.length > 100) {
             photos = photos.slice(0, 100);
         }
@@ -414,7 +516,7 @@ function savePhotoLocally(photoData) {
     }
 }
 
-// Hacer funciones globales para botones inline
+// Hacer funciones globales
 window.rotateSticker = rotateSticker;
 window.resizeSticker = resizeSticker;
 window.removeSticker = removeSticker;
