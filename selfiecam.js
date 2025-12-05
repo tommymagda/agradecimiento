@@ -29,23 +29,12 @@ const cameraContainer = document.querySelector('.camera-container');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const successMessage = document.getElementById('successMessage');
 
-// Sliders de ajuste
-const brightnessSlider = document.getElementById('brightnessSlider');
-const contrastSlider = document.getElementById('contrastSlider');
-const saturationSlider = document.getElementById('saturationSlider');
-const brightnessValue = document.getElementById('brightnessValue');
-const contrastValue = document.getElementById('contrastValue');
-const saturationValue = document.getElementById('saturationValue');
-
 // Variables de estado
 let stream = null;
 let currentFacingMode = 'user';
 let placedStickers = [];
 let stickerIdCounter = 0;
 let currentFilter = 'none';
-let currentBrightness = 100;
-let currentContrast = 100;
-let currentSaturation = 100;
 let capturedImageData = null;
 
 // Filtros disponibles (tipo Instagram)
@@ -336,11 +325,15 @@ async function capturePhoto() {
     }, 100);
 }
 
-// Abrir editor de fotos
+// Abrir editor de fotos con la imagen capturada
 function openPhotoEditor() {
-    // Aquí abrirías una modal o nueva página con el editor
-    // Por ahora, simplemente aplicamos transformaciones de Cloudinary
-    window.open('photo-editor.html', '_blank');
+    if (capturedImageData) {
+        // Guardar la imagen en sessionStorage para que sea accesible en el editor
+        sessionStorage.setItem('capturedImage', capturedImageData);
+        
+        // Abrir el editor en la misma pestaña
+        window.location.href = `photo-editor.html?image=${encodeURIComponent(capturedImageData)}`;
+    }
 }
 
 // Subir imagen a Cloudinary con transformaciones opcionales
