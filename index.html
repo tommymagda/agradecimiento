@@ -3,25 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#667eea">
-    <meta name="description" content="Aplicación para tomar selfies de graduación con marcos personalizados">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Selfie Graduación">
-    
     <title>¡Gracias por Acompañarme!</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Iconos para iOS -->
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="icon-192.png">
-    
     <style>
         * {
             margin: 0;
@@ -383,45 +365,6 @@
             }
         }
 
-        /* Botón de instalación PWA */
-        .install-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-
-        .install-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 25px;
-            border: none;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            display: none;
-            align-items: center;
-            gap: 10px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .install-button.show {
-            display: flex;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
-            }
-        }
-
         @media (max-width: 600px) {
             .container {
                 padding: 30px 25px;
@@ -443,25 +386,11 @@
                 font-size: 1.1em;
                 padding: 18px 35px;
             }
-
-            .install-button {
-                bottom: 10px;
-                right: 10px;
-                padding: 12px 20px;
-                font-size: 0.9em;
-            }
         }
     </style>
 </head>
 <body>
     <div class="particles" id="particles"></div>
-    
-    <!-- Botón de instalación PWA -->
-    <div class="install-container">
-        <button class="install-button" id="installButton">
-            📱 Instalar App
-        </button>
-    </div>
     
     <div class="container">
         <h1>¡Gracias por Estar Aquí!</h1>
@@ -550,53 +479,6 @@
             confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
             document.body.appendChild(confetti);
         }
-
-        // PWA: Registrar Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Error al registrar Service Worker:', error);
-                    });
-            });
-        }
-
-        // PWA: Botón de instalación
-        let deferredPrompt;
-        const installButton = document.getElementById('installButton');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevenir que Chrome 67 y anteriores muestren el prompt automáticamente
-            e.preventDefault();
-            // Guardar el evento para poder usarlo después
-            deferredPrompt = e;
-            // Mostrar botón de instalación
-            installButton.classList.add('show');
-        });
-
-        installButton.addEventListener('click', async () => {
-            if (!deferredPrompt) {
-                return;
-            }
-            // Mostrar el prompt de instalación
-            deferredPrompt.prompt();
-            // Esperar a que el usuario responda
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`Usuario ${outcome === 'accepted' ? 'aceptó' : 'rechazó'} instalar la app`);
-            // Limpiar el prompt
-            deferredPrompt = null;
-            // Ocultar botón
-            installButton.classList.remove('show');
-        });
-
-        // Detectar cuando la app fue instalada
-        window.addEventListener('appinstalled', () => {
-            console.log('¡PWA instalada con éxito!');
-            installButton.classList.remove('show');
-        });
     </script>
 </body>
 </html>
