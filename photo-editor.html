@@ -162,29 +162,10 @@
         let contrast = 100;
         let saturation = 100;
         let smoothing = 0;
-        let fromSelfie = false;
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const canvasContainer = document.getElementById('canvasContainer');
-
-        // Verificar si viene de selfiecam
-        const urlParams = new URLSearchParams(window.location.search);
-        const capturedImageBase64 = urlParams.get('image');
-        
-        if (capturedImageBase64) {
-            fromSelfie = true;
-            // Cargar la imagen automáticamente
-            const img = new Image();
-            img.onload = () => {
-                originalImage = img;
-                drawImageToCanvas(img);
-                document.getElementById('uploadSection').classList.add('hidden');
-                document.getElementById('instructionsSection').classList.add('hidden');
-                document.getElementById('editorSection').classList.remove('hidden');
-            };
-            img.src = decodeURIComponent(capturedImageBase64);
-        }
 
         // Filtros tipo Instagram
         const filters = [
@@ -382,30 +363,15 @@
             link.download = `foto-editada-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            
-            // Si viene de selfiecam, preguntar si quiere regresar
-            if (fromSelfie) {
-                setTimeout(() => {
-                    if (confirm('¿Querés tomar otra foto?')) {
-                        window.location.href = 'selfiecam.html';
-                    }
-                }, 500);
-            }
         });
 
         // Cerrar
         document.getElementById('closeBtn').addEventListener('click', () => {
-            if (fromSelfie) {
-                // Si viene de selfiecam, regresar a selfiecam
-                window.location.href = 'selfiecam.html';
-            } else {
-                // Si no, solo cerrar el editor
-                originalImage = null;
-                document.getElementById('uploadSection').classList.remove('hidden');
-                document.getElementById('instructionsSection').classList.remove('hidden');
-                document.getElementById('editorSection').classList.add('hidden');
-                document.getElementById('imageInput').value = '';
-            }
+            originalImage = null;
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('instructionsSection').classList.remove('hidden');
+            document.getElementById('editorSection').classList.add('hidden');
+            document.getElementById('imageInput').value = '';
         });
 
         // Event listeners para sliders
