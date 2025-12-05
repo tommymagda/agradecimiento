@@ -159,7 +159,86 @@ body {
 .emoji-3 { bottom: 120px; left: 25px; animation-delay: 1s; }
 .emoji-4 { bottom: 100px; right: 25px; animation-delay: 1.5s; }
 
-.controls {
+/* Controles internos de la cámara */
+.camera-controls {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    pointer-events: all;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 95%;
+}
+
+.controls-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.camera-controls .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.camera-controls .btn:hover {
+    transform: scale(1.05);
+}
+
+.camera-controls .btn-camera {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.camera-controls .btn-switch {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(250, 112, 154, 0.5);
+}
+
+.camera-controls .btn-stickers {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 154, 158, 0.5);
+}
+
+.camera-controls .btn-filters {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+    box-shadow: 0 4px 12px rgba(168, 237, 234, 0.5);
+}
+
+.camera-controls .btn-capture {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.6);
+    font-size: 1.1em;
+    padding: 14px 28px;
+}
+
+.camera-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Controles externos */
+.external-controls {
     display: flex;
     gap: 15px;
     justify-content: center;
@@ -188,25 +267,10 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    flex: 1;
-    justify-content: center;
-    min-width: 200px;
 }
 
 .btn-camera:hover {
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
-}
-
-.btn-capture {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
-    font-size: 1.3em;
-    padding: 20px 40px;
-}
-
-.btn-capture:hover {
-    box-shadow: 0 8px 20px rgba(245, 87, 108, 0.6);
 }
 
 .btn-download {
@@ -227,36 +291,6 @@ body {
 
 .btn-edit:hover {
     box-shadow: 0 8px 20px rgba(255, 167, 81, 0.6);
-}
-
-.btn-switch {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(250, 112, 154, 0.4);
-}
-
-.btn-switch:hover {
-    box-shadow: 0 8px 20px rgba(250, 112, 154, 0.6);
-}
-
-.btn-stickers {
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(255, 154, 158, 0.4);
-}
-
-.btn-stickers:hover {
-    box-shadow: 0 8px 20px rgba(255, 154, 158, 0.6);
-}
-
-.btn-filters {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    color: #333;
-    box-shadow: 0 5px 15px rgba(168, 237, 234, 0.4);
-}
-
-.btn-filters:hover {
-    box-shadow: 0 8px 20px rgba(168, 237, 234, 0.6);
 }
 
 .btn-gallery {
@@ -640,5 +674,15 @@ body {
     .filter-preview {
         width: 60px;
         height: 60px;
+    }
+
+    .camera-controls .btn {
+        font-size: 0.75em;
+        padding: 8px 12px;
+    }
+
+    .camera-controls .btn-capture {
+        font-size: 0.95em;
+        padding: 12px 20px;
     }
 }
